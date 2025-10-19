@@ -1,0 +1,22 @@
+# Build-Ordner ignorieren
+build/
+
+# Visual Studio temporäre Dateien
+*.sdf
+*.opensdf
+*.user
+*.userosscache
+*.suo
+*.log
+*.tlog
+*.lastbuildstate
+
+# CMake temporäre Dateien
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Mac/Windows temporäre Dateien
+.DS_Store
+Thumbs.db
