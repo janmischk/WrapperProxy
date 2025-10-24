@@ -19,9 +19,18 @@ juce_add_plugin(ProxyPlugin
     PRODUCT_NAME          "Standalone Proxy"
 )
 
-# 3️⃣ Sources
-file(GLOB_RECURSE PROJECT_SOURCES "Source/*.cpp")
-target_sources(ProxyPlugin PRIVATE ${PROJECT_SOURCES})
+# --- 🔍 Automatically include all .cpp/.h files under Source/ ---
+# Recursively gather all source files
+file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h"
+)
+
+# Add them to the target
+target_sources(ProxyPlugin PRIVATE ${SOURCE_FILES})
+
+# Mirror actual folder structure in Visual Studio
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source FILES ${SOURCE_FILES})
 
 # 4️⃣ Link JUCE modules
 target_link_libraries(ProxyPlugin
