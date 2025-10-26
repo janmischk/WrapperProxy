@@ -55,21 +55,19 @@ void ProxyPluginAudioProcessor::launchStandaloneHost()
         else {
             
             DBG("Standalone host launched successfully");
-
-            // Polling (z.B. 100 ms Pause)
             while (hostProcess.isRunning())
             {
-                juce::String output = hostProcess.readAllProcessOutput();
-                if (output.isNotEmpty())
-                    DBG("From child:\n" + output);
+                int available = (buf->writeIndex.load() - buf->readIndex.load() + buf->bufferSize) % buf->bufferSize;
+                for (int i = 0; i < available; ++i)
+                {
+                    int idx = (buf->readIndex.load() + i) % buf->bufferSize;
+                    float sample = buf->audioData[idx];
+                    DBG("Sample[" + juce::String(idx) + "] = " + juce::String(sample));
+                }
 
-                juce::Thread::sleep(100);
+                buf->readIndex.store((buf->readIndex.load() + available) % buf->bufferSize);
+                juce::Thread::sleep(1000); // or some small interval
             }
-
-            // Letzte Ausgabe nach Beendigung
-            juce::String output = hostProcess.readAllProcessOutput();
-            if (output.isNotEmpty())
-                DBG("From child:\n" + output);
         
         }
         
