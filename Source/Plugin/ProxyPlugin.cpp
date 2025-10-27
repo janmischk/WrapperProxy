@@ -2,21 +2,23 @@
 #include "ProxyPlugin.h"
 #include "JuceHeader.h"
 #include <iostream>
-#include "../Lib/File/sharedMemoryBuffer.h"
+#include "../Lib/File/Stream/sharedMemoryBuffer.h"
 
+#include "../Lib/Helper/ToastWindow.h";
 
 
 // =========================
 // Constructor / Destructor
 // =========================
 ProxyPluginAudioProcessor::ProxyPluginAudioProcessor() {
-    launchStandaloneHost();
+    //launchStandaloneHost();  //erstmal ausgemacht!
 }
 ProxyPluginAudioProcessor::~ProxyPluginAudioProcessor() {}
 
 // =========================
 // Standalone Host
 // =========================
+/* Definiert im Host
 struct SharedAudioBuffer
 {
     std::atomic<int> writeIndex{ 0 };
@@ -24,9 +26,11 @@ struct SharedAudioBuffer
     int bufferSize;
     float audioData[48000 * 2];
 };
-
+*/
 void ProxyPluginAudioProcessor::launchStandaloneHost()
 {
+    return;
+
     SharedMemoryBuffer shared("MyAudioBuffer", sizeof(SharedAudioBuffer), true);
 
     if (!shared.isValid())
@@ -110,7 +114,7 @@ public:
         addAndMakeVisible(launchButton);
         launchButton.setButtonText("Open Standalone GUI");
         launchButton.onClick = [this]() { processor.launchStandaloneHost(); };
-        setSize(200, 50);
+        setSize(500, 500);
     }
 
 private:
@@ -127,7 +131,20 @@ juce::AudioProcessorEditor* ProxyPluginAudioProcessor::createEditor()
 // =========================
 // Mandatory AudioProcessor overrides
 // =========================
-void ProxyPluginAudioProcessor::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/) {}
+void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+
+    const int bufferSize = static_cast<int>(sampleRate * 2.0); // 2 seconds of audio buffer, for example
+    outputStream = std::make_unique<AudioOutputStream>("MySharedAudio", bufferSize);
+
+    if (!outputStream->isValid()) {
+        ToastWindow::show(juce::String("Output Stream Failed"));
+        DBG("Output Stream Failed");
+    }else{
+        ToastWindow::show(juce::String("Output Stream is valid"));
+    }
+
+}
+
 void ProxyPluginAudioProcessor::releaseResources() {}
 void ProxyPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& /*buffer*/, juce::MidiBuffer& /*midiMessages*/) {}
 

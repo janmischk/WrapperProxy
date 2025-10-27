@@ -1,6 +1,7 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "../Lib/File/Stream/AudioOutputStream.h"
 
     class ProxyPluginAudioProcessor : public juce::AudioProcessor
     {
@@ -47,5 +48,6 @@
         void launchStandaloneHost();
 
     private:
+        std::unique_ptr<AudioOutputStream> outputStream;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ProxyPluginAudioProcessor)
     };
