@@ -146,7 +146,33 @@ void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
 }
 
 void ProxyPluginAudioProcessor::releaseResources() {}
-void ProxyPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& /*buffer*/, juce::MidiBuffer& /*midiMessages*/) {}
+void ProxyPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
+
+    // Only send if stream is valid
+    if (outputStream && outputStream->isValid())
+    {
+        const float* samples = buffer.getReadPointer(0);
+        const int numChannels = buffer.getNumChannels();
+        const int numSamples = buffer.getNumSamples();
+
+        // Example: take just the first channel for simplicity
+        const float* channelData = buffer.getReadPointer(0);
+
+        // Push samples into shared memory
+        outputStream->pushSamples(channelData, numSamples);
+
+        // Quick check: calculate an average level
+        float sum = 0.0f;
+        for (int i = 0; i < numSamples; ++i)
+            sum += std::abs(samples[i]);
+
+        float avg = sum / numSamples;
+
+        if (avg > 0.001f) // roughly "non-silent"
+            DBG("Audio detected, pushing samples to shared memory!");
+    }
+
+}
 
 // =========================
 // Abstract class overrides
