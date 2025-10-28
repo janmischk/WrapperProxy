@@ -11,7 +11,7 @@
 // Constructor / Destructor
 // =========================
 ProxyPluginAudioProcessor::ProxyPluginAudioProcessor() {
-    //launchStandaloneHost();  //erstmal ausgemacht!
+    launchStandaloneHost();  //erstmal ausgemacht!
 }
 ProxyPluginAudioProcessor::~ProxyPluginAudioProcessor() {}
 
