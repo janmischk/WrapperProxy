@@ -1,0 +1,20 @@
+Keine Daten senden wenn Playback Head sich bewegt!
+
+JUCE provides ways to check transport state via the playhead:
+
+if (auto* playHead = getPlayHead())
+{
+    juce::AudioPlayHead::CurrentPositionInfo pos;
+    if (playHead->getCurrentPosition(pos))
+    {
+        if (!pos.isPlaying)
+        {
+            // Transport not running — skip sending
+            return;
+        }
+    }
+}
+
+Put this guard around your shared-memory send logic.
+
+That way, you only push audio to your ring buffer when the DAW transport is actually playing, not when it’s being “scrubbed” or clicked.

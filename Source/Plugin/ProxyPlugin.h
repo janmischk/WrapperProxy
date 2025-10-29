@@ -2,8 +2,9 @@
 #pragma once
 #include <JuceHeader.h>
 #include "../Lib/File/Stream/AudioOutputStream.h"
+#include "../Lib/File/Stream/AudioInputStream.h"
 
-    class ProxyPluginAudioProcessor : public juce::AudioProcessor
+class ProxyPluginAudioProcessor : public juce::AudioProcessor
     {
     public:
         ProxyPluginAudioProcessor();
@@ -49,6 +50,8 @@
 
     private:
         juce::String outputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyOutput";
+        juce::String inputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyInput";
         std::unique_ptr<AudioOutputStream> outputStream;
+        std::unique_ptr<AudioInputStream> inputStream;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ProxyPluginAudioProcessor)
     };

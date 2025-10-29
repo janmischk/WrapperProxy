@@ -3,7 +3,6 @@
 #include "JuceHeader.h"
 #include <iostream>
 #include "../Lib/File/Stream/sharedMemoryBuffer.h"
-
 #include "../Lib/Helper/ToastWindow.h";
 
 
@@ -88,15 +87,17 @@ void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
 
     const int bufferSize = static_cast<int>(sampleRate * 2.0); // 2 seconds of audio buffer, for example
     outputStream = std::make_unique<AudioOutputStream>(outputStreamSharedMemoryName, bufferSize);
-
-    if (!outputStream->isValid()) {
-        ToastWindow::show(juce::String("Output Stream Failed"));
-        DBG("Output Stream Failed");
-    }else{
-        ToastWindow::show(juce::String("Output Stream is valid"));
-
-        launchStandaloneHost();
+    inputStream = std::make_unique<AudioInputStream>(outputStreamSharedMemoryName, bufferSize);
+ 
+    if (!outputStream->isValid() || !inputStream->isValid()){
+        
+        juce::String inputValidString = outputStream->isValid() ? "true" : "false";
+        juce::String outputValidString = inputStream->isValid() ? "true" : "false";
+        ToastWindow::show(juce::String("Proxy Stream is Invalid! Input valid: "+inputValidString + " Output valid: "+ outputValidString));
+        return;
     }
+    ToastWindow::show(juce::String("Proxy Streams succesfully launched"));
+     launchStandaloneHost();
 
 }
 
