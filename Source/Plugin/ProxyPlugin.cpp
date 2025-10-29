@@ -11,7 +11,7 @@
 // Constructor / Destructor
 // =========================
 ProxyPluginAudioProcessor::ProxyPluginAudioProcessor() {
-    launchStandaloneHost();  //erstmal ausgemacht!
+    
 }
 ProxyPluginAudioProcessor::~ProxyPluginAudioProcessor() {}
 
@@ -29,24 +29,12 @@ struct SharedAudioBuffer
 */
 void ProxyPluginAudioProcessor::launchStandaloneHost()
 {
-    return;
-
-    SharedMemoryBuffer shared("MyAudioBuffer", sizeof(SharedAudioBuffer), true);
-
-    if (!shared.isValid())
-    {
-        DBG("Shared memory creation failed!");
-        return;
-    }
-    DBG("Shared memory creation succeeded!");
-    auto* buf = static_cast<SharedAudioBuffer*>(shared.getData());
-    buf->bufferSize = 48000 * 2;
 
     juce::File exeFile("C:/Users/DevPrivat/Desktop/Projects/Wrapper/build/WrapperPlugin_artefacts/Debug/Standalone/Wrapper Plugin.exe");  
     juce::StringArray args;
    
     args.add(exeFile.getFullPathName()); // zuerst das Executable
-    args.add(shared.getSharedBufferName());
+    args.add(outputStreamSharedMemoryName);
 
     if (exeFile.existsAsFile())
     {
@@ -59,47 +47,12 @@ void ProxyPluginAudioProcessor::launchStandaloneHost()
         else {
             
             DBG("Standalone host launched successfully");
-            while (hostProcess.isRunning())
-            {
-                int available = (buf->writeIndex.load() - buf->readIndex.load() + buf->bufferSize) % buf->bufferSize;
-                for (int i = 0; i < available; ++i)
-                {
-                    int idx = (buf->readIndex.load() + i) % buf->bufferSize;
-                    float sample = buf->audioData[idx];
-                    DBG("Sample[" + juce::String(idx) + "] = " + juce::String(sample));
-                }
-
-                buf->readIndex.store((buf->readIndex.load() + available) % buf->bufferSize);
-                juce::Thread::sleep(1000); // or some small interval
-            }
-        
-        }
-        
+        }  
     }
     else
     {
         DBG("Standalone host executable not found!");
     }
-    /*
-    juce::File exeFile("C:/Users/DevPrivat/Desktop/Projects/Wrapper/build/WrapperPlugin_artefacts/Debug/Standalone/Wrapper Plugin.exe");
-
-    if (exeFile.existsAsFile())
-    {
-        juce::ChildProcess hostProcess;
-        if (!hostProcess.start(exeFile.getFullPathName()))
-            DBG("Failed to start standalone host");
-        else
-            DBG("Standalone host launched successfully");
-    }
-    else
-    {
-        DBG("Standalone host executable not found!");
-    }
-    {
-        DBG("Fehler: Shared Memory konnte nicht geöffnet werden!");
-        return;
-    }
-    */
     
 }
 
@@ -134,13 +87,15 @@ juce::AudioProcessorEditor* ProxyPluginAudioProcessor::createEditor()
 void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
 
     const int bufferSize = static_cast<int>(sampleRate * 2.0); // 2 seconds of audio buffer, for example
-    outputStream = std::make_unique<AudioOutputStream>("MySharedAudio", bufferSize);
+    outputStream = std::make_unique<AudioOutputStream>(outputStreamSharedMemoryName, bufferSize);
 
     if (!outputStream->isValid()) {
         ToastWindow::show(juce::String("Output Stream Failed"));
         DBG("Output Stream Failed");
     }else{
         ToastWindow::show(juce::String("Output Stream is valid"));
+
+        launchStandaloneHost();
     }
 
 }

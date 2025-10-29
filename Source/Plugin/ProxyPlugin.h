@@ -48,6 +48,7 @@
         void launchStandaloneHost();
 
     private:
+        juce::String outputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyOutput";
         std::unique_ptr<AudioOutputStream> outputStream;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ProxyPluginAudioProcessor)
     };
