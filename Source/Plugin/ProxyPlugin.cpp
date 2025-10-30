@@ -34,6 +34,7 @@ void ProxyPluginAudioProcessor::launchStandaloneHost()
    
     args.add(exeFile.getFullPathName()); // zuerst das Executable
     args.add(outputStreamSharedMemoryName);
+    args.add(inputStreamSharedMemoryName);
 
     if (exeFile.existsAsFile())
     {
@@ -127,6 +128,10 @@ void ProxyPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
         if (avg > 0.001f) // roughly "non-silent"
             DBG("Audio detected, pushing samples to shared memory!");
     }
+
+    // --- CUT THE OUTPUT HERE ---
+   // This ensures the plugin outputs silence to the DAW
+    buffer.clear();
 
 }
 
