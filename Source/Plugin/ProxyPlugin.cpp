@@ -26,15 +26,21 @@ struct SharedAudioBuffer
     float audioData[48000 * 2];
 };
 */
-void ProxyPluginAudioProcessor::launchStandaloneHost()
+void ProxyPluginAudioProcessor::launchStandaloneHost(int sampleRate)
 {
 
     juce::File exeFile("C:/Users/DevPrivat/Desktop/Projects/Wrapper/build/WrapperPlugin_artefacts/Debug/Standalone/Wrapper Plugin.exe");  
     juce::StringArray args;
    
+    const int blockSize = getBlockSize(); // from DAW
+    const int pollIntervalMs = 10;        // optional tweak
+
     args.add(exeFile.getFullPathName()); // zuerst das Executable
     args.add(outputStreamSharedMemoryName);
     args.add(inputStreamSharedMemoryName);
+    args.add(juce::String(blockSize));
+    args.add(juce::String(pollIntervalMs));
+    args.add(juce::String(sampleRate));
 
     if (exeFile.existsAsFile())
     {
@@ -100,7 +106,7 @@ void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
     ToastWindow::show(juce::String("Proxy Streams succesfully launched"));
     if(!standaloneLaunched)
     {
-        launchStandaloneHost();
+        launchStandaloneHost(sampleRate);
         standaloneLaunched = true;
     }
 

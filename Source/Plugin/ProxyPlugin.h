@@ -46,7 +46,7 @@ class ProxyPluginAudioProcessor : public juce::AudioProcessor
         // =========================
         // Custom function
         // =========================
-        void launchStandaloneHost();
+        void launchStandaloneHost(int sampleRate);
 
     private:
         juce::String outputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyOutput";
