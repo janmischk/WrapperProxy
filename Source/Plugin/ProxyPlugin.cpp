@@ -36,8 +36,8 @@ void ProxyPluginAudioProcessor::launchStandaloneHost(int sampleRate)
     const int pollIntervalMs = 10;        // optional tweak
 
     args.add(exeFile.getFullPathName()); // zuerst das Executable
-    args.add(outputStreamSharedMemoryName);
-    args.add(inputStreamSharedMemoryName);
+    args.add(fromProxy);
+    args.add(toProxy);
     args.add(juce::String(blockSize));
     args.add(juce::String(pollIntervalMs));
     args.add(juce::String(sampleRate));
@@ -93,8 +93,8 @@ juce::AudioProcessorEditor* ProxyPluginAudioProcessor::createEditor()
 void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
 
     const int bufferSize = static_cast<int>(sampleRate * 2.0); // 2 seconds of audio buffer, for example
-    outputStream = std::make_unique<AudioOutputStream>(outputStreamSharedMemoryName, bufferSize);
-    inputStream = std::make_unique<AudioInputStream>(inputStreamSharedMemoryName, bufferSize);
+    outputStream = std::make_unique<AudioOutputStream>(fromProxy, bufferSize);
+    inputStream = std::make_unique<AudioInputStream>(toProxy, bufferSize);
  
     if (!outputStream->isValid() || !inputStream->isValid()){
         

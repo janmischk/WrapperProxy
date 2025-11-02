@@ -49,8 +49,8 @@ class ProxyPluginAudioProcessor : public juce::AudioProcessor
         void launchStandaloneHost(int sampleRate);
 
     private:
-        juce::String outputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyOutput";
-        juce::String inputStreamSharedMemoryName = "AnnyChannelWrapperAudioProxyInput";
+        juce::String fromProxy = "fromProxy";
+        juce::String toProxy = "toProxy";
         bool standaloneLaunched = false;
         std::unique_ptr<AudioOutputStream> outputStream;
         std::unique_ptr<AudioInputStream> inputStream;
