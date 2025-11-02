@@ -28,6 +28,12 @@ void AudioInputStream::run()
 
     while (!threadShouldExit())
     {
+        if (!valid || !bufferPtr || bufferPtr->bufferSize <= 0)
+        {
+            wait(50);
+            continue;
+        }
+
         int readIdx = bufferPtr->readIndex.load();
         int writeIdx = bufferPtr->writeIndex.load();
         int available = (writeIdx - readIdx + bufferPtr->bufferSize) % bufferPtr->bufferSize;

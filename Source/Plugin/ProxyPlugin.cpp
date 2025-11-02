@@ -66,7 +66,7 @@ public:
     {
         addAndMakeVisible(launchButton);
         launchButton.setButtonText("Open Standalone GUI");
-        launchButton.onClick = [this]() { processor.launchStandaloneHost(); };
+        //launchButton.onClick = [this]() { processor.launchStandaloneHost(); };
         setSize(500, 500);
     }
 
@@ -88,7 +88,7 @@ void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
 
     const int bufferSize = static_cast<int>(sampleRate * 2.0); // 2 seconds of audio buffer, for example
     outputStream = std::make_unique<AudioOutputStream>(outputStreamSharedMemoryName, bufferSize);
-    inputStream = std::make_unique<AudioInputStream>(outputStreamSharedMemoryName, bufferSize);
+    inputStream = std::make_unique<AudioInputStream>(inputStreamSharedMemoryName, bufferSize);
  
     if (!outputStream->isValid() || !inputStream->isValid()){
         
@@ -98,40 +98,58 @@ void ProxyPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerB
         return;
     }
     ToastWindow::show(juce::String("Proxy Streams succesfully launched"));
-     launchStandaloneHost();
+    if(!standaloneLaunched)
+    {
+        launchStandaloneHost();
+        standaloneLaunched = true;
+    }
 
 }
 
 void ProxyPluginAudioProcessor::releaseResources() {}
 void ProxyPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
 
-    // Only send if stream is valid
+    juce::ignoreUnused(midiMessages);
+
+    const int numSamples = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+
+    // --- Send audio to standalone ---
     if (outputStream && outputStream->isValid())
     {
-        const float* samples = buffer.getReadPointer(0);
-        const int numChannels = buffer.getNumChannels();
-        const int numSamples = buffer.getNumSamples();
-
-        // Example: take just the first channel for simplicity
-        const float* channelData = buffer.getReadPointer(0);
-
-        // Push samples into shared memory
+        const float* channelData = buffer.getReadPointer(0); // mono for simplicity
         outputStream->pushSamples(channelData, numSamples);
 
-        // Quick check: calculate an average level
+        // Optional debug
         float sum = 0.0f;
         for (int i = 0; i < numSamples; ++i)
-            sum += std::abs(samples[i]);
-
+            sum += std::abs(channelData[i]);
         float avg = sum / numSamples;
-
-        if (avg > 0.001f) // roughly "non-silent"
+        if (avg > 0.001f)
             DBG("Audio detected, pushing samples to shared memory!");
     }
 
-    // --- CUT THE OUTPUT HERE ---
-   // This ensures the plugin outputs silence to the DAW
-    buffer.clear();
+    // --- Read loopback audio from standalone ---
+    if (inputStream && inputStream->isValid())
+    {
+        float* channelOut = buffer.getWritePointer(0); // mono
+        int got = inputStream->getSamples(channelOut, numSamples);
+
+        // If fewer samples available, zero the rest
+        for (int i = got; i < numSamples; ++i)
+            channelOut[i] = 0.0f;
+
+        // Optional: extend to multiple channels
+        for (int ch = 1; ch < numChannels; ++ch)
+        {
+            float* outCh = buffer.getWritePointer(ch);
+            std::memcpy(outCh, channelOut, numSamples * sizeof(float));
+        }
+    }
+    else
+    {
+        buffer.clear(); // fallback: silence if no input
+    }
 
 }
 
